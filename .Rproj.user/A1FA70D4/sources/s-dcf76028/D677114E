@@ -1,0 +1,32 @@
+{
+    "id": "D677114E",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1589253319493.0,
+    "source_on_save": false,
+    "relative_order": 5,
+    "properties": {
+        "expression": "spmat",
+        "caption": "spmat",
+        "totalObservations": 52,
+        "displayedObservations": 52,
+        "variables": 52,
+        "cacheKey": "000E0794",
+        "object": "spmat",
+        "environment": "_rs_no_env",
+        "contentUrl": "grid_resource/gridviewer.html?env=_rs_no_env&obj=spmat&cache_key=000E0794&max_cols=50",
+        "preview": 0
+    },
+    "folds": "",
+    "lastKnownWriteTime": 4607182418800017408,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1589253319493,
+    "read_only": false,
+    "read_only_alternatives": []
+}

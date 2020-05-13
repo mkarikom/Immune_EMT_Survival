@@ -1,0 +1,132 @@
+library(SummarizedExperiment)
+library(TCGAbiolinks)
+library(survival)
+library(survminer)
+library(ggplot2)
+library(msigdbr)
+library(tidyr)
+library(gridExtra)
+library(caret)
+library(Cairo)
+library(umap)
+library(dbscan)
+library(mclust)
+
+saveData <- function(tumortype = "PAAD",
+                     datadir = "./DataRDS/"){
+  data <- gdcQ(paste0("TCGA-",tumortype))
+  saveRDS(data, paste0(datadir, tumortype, ".RDS"))
+  return(data)
+}
+
+saveSets <- function(tumortype = "PAAD",
+                     genes = NULL,
+                     savedir = "./DataRDS/"){
+  sets = list()
+  print("searching BOTH")
+  # save the gene sets for various keyword combos
+  kw1 <- list(EMT = c("EPITHELIAL_TO_MESENCHYMAL",
+                      "EMT"),
+              INFLAM = c("INFLAMMATORY",
+                         "INFLAMMATION"))
+  sets[["both"]] <- kwsearch(keywords = kw1,
+                             data_genes = genes)
+  
+  print("searching EMT")
+  kw2 <- list(EMT = c("EPITHELIAL_TO_MESENCHYMAL","EMT"))
+  sets[["emt"]] <- kwsearch(keywords = kw2,
+                            data_genes = genes)
+  
+  
+  print("searching INFLAM")
+  kw3 <- list(INFLAM = c("INFLAMMATORY",
+                         "INFLAMMATION"))
+  sets[["inflam"]] <- kwsearch(keywords = kw3,
+                               data_genes = genes)
+  saveRDS(sets, paste0(savedir, tumortype, "_genesets.RDS"))
+}
+
+
+gdcQ <- function(proj = "TCGA-PAAD"){
+  ## get the expression and survival data
+  query <- GDCquery(project = proj,
+                    data.category = "Gene expression",
+                    data.type = "Gene expression quantification",
+                    platform = "Illumina HiSeq", 
+                    file.type  = "normalized_results",
+                    experimental.strategy = "RNA-Seq",
+                    legacy = TRUE)
+  GDCdownload(query, method = "api", files.per.chunk = 10)
+  data <- GDCprepare(query)
+  
+  indDead = intersect(which(tolower(data$vital_status) == "dead"), which(data$days_to_death > 0))
+  indAlive = Reduce(`intersect`, list(which(tolower(data$vital_status) == "alive"), which(is.na(data$days_to_death)), which(data$days_to_last_follow_up > 0)))  
+  indAll = c(indDead, indAlive)
+  
+  data_matrix <- assay(data, 'normalized_count'); data_matrix = data_matrix[,indAll]
+  data_genes <- rownames(data_matrix)
+  time = c(data$days_to_death[indDead], data$days_to_last_follow_up[indAlive])
+  status <- c(data$vital_status[indDead], data$vital_status[indAlive])
+  bcr_patient_barcode <- data$bcr_patient_barcode
+  
+  bcr_patient_barcode = bcr_patient_barcode[indAll]
+  
+  for(i in 1:length(status)){
+    if(tolower(status[i]) == 'alive'){
+      status[i] <- 0 #these patients have been censored
+    } else {
+      status[i] <- 1
+    }
+  }
+  
+  return(list(data = data_matrix,
+              data_genes = data_genes,
+              status = status,
+              time = time,
+              bcr_patient_barcode = bcr_patient_barcode))
+}
+
+## outputs a list of tables, one for each keyword set
+## each row contains a set name and gene list
+kwsearch <- function(data_genes,
+                     species = 'Homo sapiens',
+                     keywords =
+                       list(EMT = c("EPITHELIAL_TO_MESENCHYMAL",
+                                    "EMT"),
+                            INFLAM = c("INFLAMMATORY",
+                                       "INFLAMMATION"))){
+  
+  ## look for some interesting gene sets (axis 1 and 2)
+  # load all msigdb sets
+  #browser()
+  msigdb <- msigdbr::msigdbr(species = species)
+  set_list <- list()
+  for(i in 1:length(keywords)){
+    # find interesting sets
+    key <- keywords[[i]]
+    set_names <- unique(grep(paste(key,collapse="|"), 
+                             msigdb$gs_name, value=TRUE))
+    
+    gs_table <- data.frame(matrix(0, length(set_names),0))
+    
+    ## add the genes to tables (axis 1 and 2)
+    genes <- list()
+    names <- c()
+    for(j in 1:length(set_names)){
+      # make sure we have data on the genes in this set
+      ind <- grep(set_names[j], msigdb$gs_name)
+      filter <- which(msigdb$gene_symbol[ind] %in% data_genes)
+      ind <- ind[filter]
+      names[j] <- set_names[j]
+      genes[[j]] <- msigdb$gene_symbol[ind]
+    }
+    tbl_ind <- match(names, msigdb$gs_name)
+    set_ids <- msigdb$gs_id[tbl_ind]
+    
+    gs_table$set_names <- names
+    gs_table$set_ids <- set_ids
+    gs_table$genes <- genes
+    set_list[[as.name(names(keywords)[i])]] <- gs_table
+  }
+  return(set_list)
+}
