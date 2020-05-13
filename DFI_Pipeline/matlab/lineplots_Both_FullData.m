@@ -9,8 +9,8 @@ clear;
 primarygenes = {'CTNNB1','CTNNBIP1','LRP5','WNT2','WNT11','WNT5A','FAT4','DCHS1','ZEB1','STAT1','BMP2','BMP4','BMP7','BMPR1A','FGF7','FGF9','FGFR1','FGFR2','MYC','FGFR1','FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK','LRP6'};
 secondarygenes = {'CTNNB1','CTNNBIP1','LRP5','WNT2','WNT11','WNT5A','FAT4','DCHS1','ZEB1','STAT1','BMP2','BMP4','BMP7','BMPR1A','FGF7','FGF9','FGFR1','FGFR2','MYC','FGFR1','FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK','LRP6'};
 
-primarygenes = {'FZD2','FZD8','FZD6','ROR1','ROR2','LRP5','LRP6'};
-secondarygenes = {'WNT2','WNT11','WNT5A'};
+primarygenes = {}; % set these to empty to do all combinations of genes (set on line 71 and 348)
+secondarygenes = {};
 
 % look at all the patients combined for the individual tumors, then get ARD
 % for all 45 mesen prolif genes for 100 resamplings of 100 BLCA and UCEC
@@ -73,6 +73,14 @@ for i = 1:size(metadata,1)
 
         opts = detectImportOptions(fngene);
         genelist = readtable(fngene, opts);
+        
+        if(length(primarygenes) == 0)
+            primarygenes = genelist.colnames';
+        end
+        
+        if(length(secondarygenes) == 0)
+            secondarygenes = genelist.colnames';
+        end
 
         data_expr = readtable(fnexpr, opts);
 
@@ -222,7 +230,7 @@ for i = 1:size(metadata,1)
                     cb1 = colorbar('southoutside');
 
                     ax(2)=nexttile;
-                    primaryRep = repmat(denormPrimaryGrid',1,nGrid)';
+                    primaryRep = repmat(denorqmPrimaryGrid',1,nGrid)';
                     secondaryRep = flipud(repmat(denormSecondaryGrid',1,nGrid)); % for surf to work, the top of this matrix is the origin orthogonal to X... ¯\(°_o)/¯
 
                     sp2 = surf(primaryRep,secondaryRep,flipud(gridVariance));
@@ -337,6 +345,14 @@ for i = 1:size(metadata,1)
         opts = detectImportOptions(fngene);
         genelist = readtable(fngene, opts);
 
+        if(length(primarygenes) == 0)
+            primarygenes = genelist.colnames';
+        end
+        
+        if(length(secondarygenes) == 0)
+            secondarygenes = genelist.colnames';
+        end
+        
         data_expr = readtable(fnexpr, opts);
 
         data_expr.Properties.VariableNames = genelist.colnames;
