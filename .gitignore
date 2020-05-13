@@ -4,4 +4,4 @@
 *.RData
 *.Rproj
 *.mat
-
+*.Rhistory
