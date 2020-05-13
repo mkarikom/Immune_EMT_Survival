@@ -33,7 +33,7 @@ basetolx = 1e-3;
 jitterbase = 1e-9;
 msiginit = 1e-9;
 maglinit = 1e-9;
-cminit = 1e-9; % initial value for constant kernel
+cminit = 1e-1; % initial value for constant kernel
 shinit = 3;% encourage large values for the length scales
 sinit = 0.5;
 m_shinit = 1;% encourage small values for the magnitude
@@ -57,7 +57,7 @@ if ~isdeployed
 end
 
 mkdir(plotdir);
-rootdir = [plotdir,'lineplots_fixFlatP_ConstBasicWorking_' num2str(nGrid) '_'];
+rootdir = [plotdir,'lineplots_fixFlatP_ConstBasicWorking_v2_' num2str(nGrid) '_'];
 metadata = readtable("../DataTables/Prolif_acc_AddRecGene.txt", 'ReadRowNames', false, 'Delimiter', '\t');
 addpath(genpath('./export_fig'));
 
@@ -106,8 +106,6 @@ for i = 1:size(metadata,1)
         [n, m]=size(XN);
 
 
-n
-
         for primary = 1:M
             pgene = tumors(i).genes{primary}; % name of primary gene
             if any(strcmp(primarygenes,pgene))
@@ -136,19 +134,6 @@ n
                         secondaryGrid = linspace(min(XN(:,secondary)),max(XN(:,secondary)),nGrid);
                         secondaryGrid = flip(secondaryGrid); % we fill the p table from top to bottom
                         
-                        pc0 = prior_gamma('sh',cmsh,'is',cmis);
-                        pl0 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm0 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        pl1 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm1 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        pl2 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm2 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        pl3 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm3 = prior_gamma('sh',m_shinit,'is',m_isinit);
-
-
-                        pl4 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm4 = prior_gamma('sh',m_shinit,'is',m_isinit);
                         nonWntIdx = find(contains(genelist.colnames,{'MSX','SOX','VEGF','FBX','IHH','PHF','SHOX',...
                                                                      'FGF','LMNA','SMO','IRS','PRRX','FOX','SIX','MYC','BMP',...
                                                                      'NFIB','TGFB','PDGF','TBX','OSR','HAND','PTN','DCHS',...
@@ -164,35 +149,23 @@ n
                         gpcf_wnt5a = gpcf_sexp('selectedVariables', wnt5aIndex,'lengthScale', ones(1,length(wnt5aIndex)).*maglinit, 'magnSigma2', msiginit);%WNT5A,LRP5,LRP6,'FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK'
                         gpcf_wnt11 = gpcf_sexp('selectedVariables', wnt11Index,'lengthScale', ones(1,length(wnt11Index)).*maglinit, 'magnSigma2', msiginit);%WNT11,LRP5,LRP6,'FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK'
 
-                        % try with other priors
-        %                 gpcf_c = gpcf_constant('constSigma2_prior',pc0);
-        %                 gpcf_all = gpcf_sexp(gpcf_all, 'lengthScale_prior', pl0,'magnSigma2_prior', pm0); %
-        %                 gpcf = gpcf_sexp(gpcf, 'lengthScale_prior', pl1,'magnSigma2_prior', pm1); %
-        %                 gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'lengthScale_prior', pl2,'magnSigma2_prior', pm2); %
-        %                 gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'lengthScale_prior', pl3,'magnSigma2_prior', pm3); %
-        %                 gpcf_wnt11 = gpcf_sexp(gpcf_wnt11, 'lengthScale_prior', pl4,'magnSigma2_prior', pm4); %
 
-                        gpcf_c = gpcf_constant('constSigma2_prior',prior_gaussian('s2',0.1));
-        %                gpcf_c = gpcf_constant('constSigma2_prior',prior_sinvchi2('s2',1^2,'nu',1));
+                        gpcf_c = gpcf_constant(gpcf_c,'constSigma2_prior',prior_gaussian('s2',0.1));
                         gpcf_all = gpcf_sexp(gpcf_all, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
-                        gpcf = gpcf_sexp(gpcf, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
-                        gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
-                        gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
-                        gpcf_wnt11 = gpcf_sexp(gpcf_wnt11, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
+                        gpcf = gpcf_sexp(gpcf, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                        gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                        gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                        gpcf_wnt11 = gpcf_sexp(gpcf_wnt11, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
 
 
                         lik = lik_logit();
         %                gp = gp_set('lik', lik, 'cf', {gpcf_c,gpcf_all,gpcf_wnt2,gpcf_wnt5a,gpcf_wnt11},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
                         gp = gp_set('lik', lik, 'cf', {gpcf_c,gpcf_all},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
         %                gp = gp_set('lik', lik, 'cf', {gpcf_all},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
-                        compNames = {'All','Wnt2','Wnt5a','Wnt11'};
-
-
 
                         opt=optimset('TolFun',basetolf,'TolX',basetolx,'MaxIter',maxiter,'MaxFunEvals',maxfevals,'Display','iter','Algorithm','quasi-newton');
                         gp=gp_optim(gp,XN,Y,'opt',opt,'optimf',optmeth);
 
-        %                [~,~,lploo]=gpep_loopred(gp,XN,Y);
                         [EFT, VARFT, lploo, EYT, VARYT] = gpep_loopred(gp,XN,Y);
 
                         looPreds = (exp(lploo) > 0.5).*2-1;
@@ -211,16 +184,6 @@ n
                         fprintf('\n ard ls \n')
                         format long
                         exp(gp.cf{2}.lengthScale) - min(exp(gp.cf{2}.lengthScale))
-
-        %                 % no constant term
-        %                 fprintf('\n ard sigma \n')
-        %                 exp(gp.cf{1}.magnSigma2)
-        %                 fprintf('\n ard ls \n')
-        %                 format long
-        %                 exp(gp.cf{1}.lengthScale)
-        %                 exp(gp.cf{1}.lengthScale) - min(exp(gp.cf{1}.lengthScale))
-        %                 ard(:,ii) = gp.cf{1}.lengthScale;
-
 
                         allgenes = allgenesMean;
                         allgenes(:,primary) = primaryGrid;
@@ -307,71 +270,46 @@ n
                     stopsecval=denormdata(secondaryGrid(stopind),XMEAN(secondary),XSTD(secondary));
                     startsecval=denormdata(secondaryGrid(startind),XMEAN(secondary),XSTD(secondary));
 
+                    nonWntIdx = find(contains(genelist.colnames,{'MSX','SOX','VEGF','FBX','IHH','PHF','SHOX',...
+                                                                 'FGF','LMNA','SMO','IRS','PRRX','FOX','SIX','MYC','BMP',...
+                                                                 'NFIB','TGFB','PDGF','TBX','OSR','HAND','PTN','DCHS',...
+                                                                 'ZEB','SHH','FAT','CHRD','STAT','GPC3'}));
+                    wnt2Index = find(contains(genelist.colnames, {'WNT2','FZD','CTNNB','LRP'}));
+                    wnt11Index = find(contains(genelist.colnames, {'WNT11','FZD','CTNNB','LRP'}));
+                    wnt5aIndex = find(contains(genelist.colnames, {'WNT5A','LRP','ROR','RYK'}));
 
-                        pc0 = prior_gamma('sh',cmsh,'is',cmis);
-                        pl0 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm0 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        pl1 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm1 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        pl2 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm2 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        pl3 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm3 = prior_gamma('sh',m_shinit,'is',m_isinit);
-
-
-                        pl4 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm4 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        nonWntIdx = find(contains(genelist.colnames,{'MSX','SOX','VEGF','FBX','IHH','PHF','SHOX',...
-                                                                     'FGF','LMNA','SMO','IRS','PRRX','FOX','SIX','MYC','BMP',...
-                                                                     'NFIB','TGFB','PDGF','TBX','OSR','HAND','PTN','DCHS',...
-                                                                     'ZEB','SHH','FAT','CHRD','STAT','GPC3'}));
-                        wnt2Index = find(contains(genelist.colnames, {'WNT2','FZD','CTNNB','LRP'}));
-                        wnt11Index = find(contains(genelist.colnames, {'WNT11','FZD','CTNNB','LRP'}));
-                        wnt5aIndex = find(contains(genelist.colnames, {'WNT5A','LRP','ROR','RYK'}));
-
-                        gpcf_c = gpcf_constant('constSigma2',cminit);
-                        gpcf_all = gpcf_sexp('lengthScale', ones(1,m).*maglinit, 'magnSigma2', msiginit);        
-                        gpcf = gpcf_sexp('selectedVariables', nonWntIdx,'lengthScale', ones(1,length(nonWntIdx)).*maglinit, 'magnSigma2', msiginit);        
-                        gpcf_wnt2 = gpcf_sexp('selectedVariables', wnt2Index,'lengthScale', ones(1,length(wnt2Index)).*maglinit, 'magnSigma2', msiginit);%WNT2,LRP5,LRP6,'CTNNB1','CTNNBIP1','FZD2','FZD4','FZD6','FZD8'
-                        gpcf_wnt5a = gpcf_sexp('selectedVariables', wnt5aIndex,'lengthScale', ones(1,length(wnt5aIndex)).*maglinit, 'magnSigma2', msiginit);%WNT5A,LRP5,LRP6,'FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK'
-                        gpcf_wnt11 = gpcf_sexp('selectedVariables', wnt11Index,'lengthScale', ones(1,length(wnt11Index)).*maglinit, 'magnSigma2', msiginit);%WNT11,LRP5,LRP6,'FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK'
-
-                        % try with other priors
-        %                 gpcf_c = gpcf_constant('constSigma2_prior',pc0);
-        %                 gpcf_all = gpcf_sexp(gpcf_all, 'lengthScale_prior', pl0,'magnSigma2_prior', pm0); %
-        %                 gpcf = gpcf_sexp(gpcf, 'lengthScale_prior', pl1,'magnSigma2_prior', pm1); %
-        %                 gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'lengthScale_prior', pl2,'magnSigma2_prior', pm2); %
-        %                 gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'lengthScale_prior', pl3,'magnSigma2_prior', pm3); %
-        %                 gpcf_wnt11 = gpcf_sexp(gpcf_wnt11, 'lengthScale_prior', pl4,'magnSigma2_prior', pm4); %
-
-                        gpcf_c = gpcf_constant('constSigma2_prior',prior_gaussian('mu',0.5,'s2',0.25));
-        %                gpcf_c = gpcf_constant('constSigma2_prior',prior_sinvchi2('s2',1^2,'nu',1));
-                        gpcf_all = gpcf_sexp(gpcf_all, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',0.25))); %
-                        gpcf = gpcf_sexp(gpcf, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
-                        gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
-                        gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
-                        gpcf_wnt11 = gpcf_sexp(gpcf_wnt11, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
+                    gpcf_c = gpcf_constant('constSigma2',cminit);
+                    gpcf_all = gpcf_sexp('lengthScale', ones(1,m).*maglinit, 'magnSigma2', msiginit);        
+                    gpcf = gpcf_sexp('selectedVariables', nonWntIdx,'lengthScale', ones(1,length(nonWntIdx)).*maglinit, 'magnSigma2', msiginit);        
+                    gpcf_wnt2 = gpcf_sexp('selectedVariables', wnt2Index,'lengthScale', ones(1,length(wnt2Index)).*maglinit, 'magnSigma2', msiginit);%WNT2,LRP5,LRP6,'CTNNB1','CTNNBIP1','FZD2','FZD4','FZD6','FZD8'
+                    gpcf_wnt5a = gpcf_sexp('selectedVariables', wnt5aIndex,'lengthScale', ones(1,length(wnt5aIndex)).*maglinit, 'magnSigma2', msiginit);%WNT5A,LRP5,LRP6,'FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK'
+                    gpcf_wnt11 = gpcf_sexp('selectedVariables', wnt11Index,'lengthScale', ones(1,length(wnt11Index)).*maglinit, 'magnSigma2', msiginit);%WNT11,LRP5,LRP6,'FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK'
 
 
-                        lik = lik_logit();
-        %                gp = gp_set('lik', lik, 'cf', {gpcf_c,gpcf_all,gpcf_wnt2,gpcf_wnt5a,gpcf_wnt11},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
-                        gp = gp_set('lik', lik, 'cf', {gpcf_c,gpcf_all},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
-        %                gp = gp_set('lik', lik, 'cf', {gpcf_all},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
-                        compNames = {'All','Wnt2','Wnt5a','Wnt11'};
+                    gpcf_c = gpcf_constant(gpcf_c,'constSigma2_prior',prior_gaussian('s2',0.1));
+                    gpcf_all = gpcf_sexp(gpcf_all, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                    gpcf = gpcf_sexp(gpcf, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                    gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                    gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                    gpcf_wnt11 = gpcf_sexp(gpcf_wnt11, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
 
 
+                    lik = lik_logit();
+    %                gp = gp_set('lik', lik, 'cf', {gpcf_c,gpcf_all,gpcf_wnt2,gpcf_wnt5a,gpcf_wnt11},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
+                    gp = gp_set('lik', lik, 'cf', {gpcf_c,gpcf_all},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
+    %                gp = gp_set('lik', lik, 'cf', {gpcf_all},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
 
-                        opt=optimset('TolFun',basetolf,'TolX',basetolx,'MaxIter',maxiter,'MaxFunEvals',maxfevals,'Display','iter','Algorithm','quasi-newton');
-                        gp=gp_optim(gp,XN,Y,'opt',opt,'optimf',optmeth);
+                    opt=optimset('TolFun',basetolf,'TolX',basetolx,'MaxIter',maxiter,'MaxFunEvals',maxfevals,'Display','iter','Algorithm','quasi-newton');
+                    gp=gp_optim(gp,XN,Y,'opt',opt,'optimf',optmeth);
 
-                    [~,~,lploo]=gpep_loopred(gp,XN,Y);
+                    [EFT, VARFT, lploo, EYT, VARYT] = gpep_loopred(gp,XN,Y);
 
                     looPreds = (exp(lploo) > 0.5).*2-1;
                     naivePreds = ones(length(Y),1);
                     looAcc = sum(abs((looPreds + Y)./2))/length(Y)
                     naiveAcc = sum(abs((naivePreds + Y)./2))/length(Y)
                     AccDiff = looAcc-naiveAcc;
-                    
+
                     tumors(i).gp_names = struct();
                     [tumors(i).gp_names.W,tumors(i).gp_names.WS,tumors(i).gp_names.H] = gp_pak(gp);
                     tumors(i).looAcc = looAcc;
@@ -392,76 +330,47 @@ n
 
 
 
-                        pc0 = prior_gamma('sh',cmsh,'is',cmis);
-                        pl0 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm0 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        pl1 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm1 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        pl2 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm2 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        pl3 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm3 = prior_gamma('sh',m_shinit,'is',m_isinit);
+
+                    
+                    nonWntIdx = find(contains(genelist.colnames,{'MSX','SOX','VEGF','FBX','IHH','PHF','SHOX',...
+                                                                 'FGF','LMNA','SMO','IRS','PRRX','FOX','SIX','MYC','BMP',...
+                                                                 'NFIB','TGFB','PDGF','TBX','OSR','HAND','PTN','DCHS',...
+                                                                 'ZEB','SHH','FAT','CHRD','STAT','GPC3'}));
+                    wnt2Index = find(contains(genelist.colnames, {'WNT2','FZD','CTNNB','LRP'}));
+                    wnt11Index = find(contains(genelist.colnames, {'WNT11','FZD','CTNNB','LRP'}));
+                    wnt5aIndex = find(contains(genelist.colnames, {'WNT5A','LRP','ROR','RYK'}));
+
+                    gpcf_c = gpcf_constant('constSigma2',cminit);
+                    gpcf_all = gpcf_sexp('lengthScale', ones(1,m).*maglinit, 'magnSigma2', msiginit);        
+                    gpcf = gpcf_sexp('selectedVariables', nonWntIdx,'lengthScale', ones(1,length(nonWntIdx)).*maglinit, 'magnSigma2', msiginit);        
+                    gpcf_wnt2 = gpcf_sexp('selectedVariables', wnt2Index,'lengthScale', ones(1,length(wnt2Index)).*maglinit, 'magnSigma2', msiginit);%WNT2,LRP5,LRP6,'CTNNB1','CTNNBIP1','FZD2','FZD4','FZD6','FZD8'
+                    gpcf_wnt5a = gpcf_sexp('selectedVariables', wnt5aIndex,'lengthScale', ones(1,length(wnt5aIndex)).*maglinit, 'magnSigma2', msiginit);%WNT5A,LRP5,LRP6,'FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK'
+                    gpcf_wnt11 = gpcf_sexp('selectedVariables', wnt11Index,'lengthScale', ones(1,length(wnt11Index)).*maglinit, 'magnSigma2', msiginit);%WNT11,LRP5,LRP6,'FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK'
 
 
-                        pl4 = prior_invgamma('sh',shinit,'s',sinit);
-                        pm4 = prior_gamma('sh',m_shinit,'is',m_isinit);
-                        nonWntIdx = find(contains(genelist.colnames,{'MSX','SOX','VEGF','FBX','IHH','PHF','SHOX',...
-                                                                     'FGF','LMNA','SMO','IRS','PRRX','FOX','SIX','MYC','BMP',...
-                                                                     'NFIB','TGFB','PDGF','TBX','OSR','HAND','PTN','DCHS',...
-                                                                     'ZEB','SHH','FAT','CHRD','STAT','GPC3'}));
-                        wnt2Index = find(contains(genelist.colnames, {'WNT2','FZD','CTNNB','LRP'}));
-                        wnt11Index = find(contains(genelist.colnames, {'WNT11','FZD','CTNNB','LRP'}));
-                        wnt5aIndex = find(contains(genelist.colnames, {'WNT5A','LRP','ROR','RYK'}));
-
-                        gpcf_c = gpcf_constant('constSigma2',cminit);
-                        gpcf_all = gpcf_sexp('lengthScale', ones(1,m).*maglinit, 'magnSigma2', msiginit);        
-                        gpcf = gpcf_sexp('selectedVariables', nonWntIdx,'lengthScale', ones(1,length(nonWntIdx)).*maglinit, 'magnSigma2', msiginit);        
-                        gpcf_wnt2 = gpcf_sexp('selectedVariables', wnt2Index,'lengthScale', ones(1,length(wnt2Index)).*maglinit, 'magnSigma2', msiginit);%WNT2,LRP5,LRP6,'CTNNB1','CTNNBIP1','FZD2','FZD4','FZD6','FZD8'
-                        gpcf_wnt5a = gpcf_sexp('selectedVariables', wnt5aIndex,'lengthScale', ones(1,length(wnt5aIndex)).*maglinit, 'magnSigma2', msiginit);%WNT5A,LRP5,LRP6,'FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK'
-                        gpcf_wnt11 = gpcf_sexp('selectedVariables', wnt11Index,'lengthScale', ones(1,length(wnt11Index)).*maglinit, 'magnSigma2', msiginit);%WNT11,LRP5,LRP6,'FZD2','FZD4','FZD6','FZD8','ROR1','ROR2','RYK'
-
-                        % try with other priors
-        %                 gpcf_c = gpcf_constant('constSigma2_prior',pc0);
-        %                 gpcf_all = gpcf_sexp(gpcf_all, 'lengthScale_prior', pl0,'magnSigma2_prior', pm0); %
-        %                 gpcf = gpcf_sexp(gpcf, 'lengthScale_prior', pl1,'magnSigma2_prior', pm1); %
-        %                 gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'lengthScale_prior', pl2,'magnSigma2_prior', pm2); %
-        %                 gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'lengthScale_prior', pl3,'magnSigma2_prior', pm3); %
-        %                 gpcf_wnt11 = gpcf_sexp(gpcf_wnt11, 'lengthScale_prior', pl4,'magnSigma2_prior', pm4); %
-
-                        gpcf_c = gpcf_constant('constSigma2_prior',prior_gaussian('mu',0.5,'s2',0.25));
-        %                gpcf_c = gpcf_constant('constSigma2_prior',prior_sinvchi2('s2',1^2,'nu',1));
-                        gpcf_all = gpcf_sexp(gpcf_all, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',0.25))); %
-                        gpcf = gpcf_sexp(gpcf, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
-                        gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
-                        gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
-                        gpcf_wnt11 = gpcf_sexp(gpcf_wnt11, 'lengthScale_prior',prior_gaussian('s2',0.25)); %
+                    gpcf_c = gpcf_constant(gpcf_c,'constSigma2_prior',prior_gaussian('s2',0.1));
+                    gpcf_all = gpcf_sexp(gpcf_all, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                    gpcf = gpcf_sexp(gpcf, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                    gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                    gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                    gpcf_wnt11 = gpcf_sexp(gpcf_wnt11, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
 
 
-                        lik = lik_logit();
-        %                gp = gp_set('lik', lik, 'cf', {gpcf_c,gpcf_all,gpcf_wnt2,gpcf_wnt5a,gpcf_wnt11},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
-                        gp = gp_set('lik', lik, 'cf', {gpcf_c,gpcf_all},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
-        %                gp = gp_set('lik', lik, 'cf', {gpcf_all},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
-                        compNames = {'All','Wnt2','Wnt5a','Wnt11'};
+                    lik = lik_logit();
+    %                gp = gp_set('lik', lik, 'cf', {gpcf_c,gpcf_all,gpcf_wnt2,gpcf_wnt5a,gpcf_wnt11},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
+                    gp = gp_set('lik', lik, 'cf', {gpcf_c,gpcf_all},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
+    %                gp = gp_set('lik', lik, 'cf', {gpcf_all},'latent_method', 'EP', 'jitterSigma2', jitterbase); 
 
+                    opt=optimset('TolFun',basetolf,'TolX',basetolx,'MaxIter',maxiter,'MaxFunEvals',maxfevals,'Display','iter','Algorithm','quasi-newton');
+                    gp=gp_optim(gp,XN,Y,'opt',opt,'optimf',optmeth);
 
-
-                        opt=optimset('TolFun',basetolf,'TolX',basetolx,'MaxIter',maxiter,'MaxFunEvals',maxfevals,'Display','iter','Algorithm','quasi-newton');
-                        gp=gp_optim(gp,XN,Y,'opt',opt,'optimf',optmeth);
-
-                    [~,~,lploo]=gpep_loopred(gp,XN,Y);
+                    [EFT, VARFT, lploo, EYT, VARYT] = gpep_loopred(gp,XN,Y);
 
                     looPreds = (exp(lploo) > 0.5).*2-1;
                     naivePreds = ones(length(Y),1);
                     looAcc = sum(abs((looPreds + Y)./2))/length(Y)
                     naiveAcc = sum(abs((naivePreds + Y)./2))/length(Y)
                     AccDiff = looAcc-naiveAcc;
-                    
-                    tumors(i).gp_names = struct();
-                    [tumors(i).gp_names.W,tumors(i).gp_names.WS,tumors(i).gp_names.H] = gp_pak(gp);
-                    tumors(i).looAcc = looAcc;
-                    tumors(i).naiveAcc = naiveAcc;
-
-                    rng(seed,'twister');
 
                     xt = repmat(feval('mean',XN), size(XN,1), 1); xt(:,primary) = XN(:,primary);
                     xt(:,secondary) = repmat(secondaryGrid(stopind),size(xt,1),1);
@@ -479,8 +388,6 @@ n
                     ylabel('p(high-DFI)','FontSize',labFont)
                     xlabel(['Log expression of ' tumors(i).genes{primary}],'FontSize',labFont);
                     axis square;
-
-
 
                     legend([tumors(i).genes{secondary} ' = ' num2str(startsecval)],...
                             [tumors(i).genes{secondary} ' = ' num2str(stopsecval)],...
@@ -503,7 +410,7 @@ copyfile(path, outputdir)
 
 
 %% run additive model
-rootdir = [plotdir,'lineplots_fixFlatP_ConstBasicWorking_ADDITIVE_' num2str(nGrid) '_'];
+rootdir = [plotdir,'lineplots_fixFlatP_ConstBasicWorking_v2_ADDITIVE_' num2str(nGrid) '_'];
 metadata = readtable("../DataTables/Prolif_acc_AddRecGene.txt", 'ReadRowNames', false, 'Delimiter', '\t');
 addpath(genpath('./export_fig'));
 
