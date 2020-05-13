@@ -58,7 +58,6 @@ end
 mkdir(plotdir);
 rootdir = [plotdir,'lineplots_FullData_WithParfor_' num2str(nGrid) '_'];
 metadata = readtable("../DataTables/Prolif_acc_AddRecGene.txt", 'ReadRowNames', false, 'Delimiter', '\t');
-addpath(genpath('./export_fig'));
 
 mkdir('tmp')
 tumors = struct();
@@ -163,7 +162,7 @@ for i = 1:size(metadata,1)
         tumors(i).ard = gp.cf{2}.lengthScale;
         gp_packed = gp_pak(gp);
         
-        for primary = 1:M
+        parfor primary = 1:M
             pgene = tumors(i).genes{primary}; % name of primary gene
             if any(strcmp(primarygenes,pgene))
 
@@ -185,7 +184,7 @@ for i = 1:size(metadata,1)
                     gridProbs = zeros(nGrid); % a matrix to store the conditional probs
                     gridAcc = zeros(nGrid,1); % this is always the same, but useful for debug
                     gridNaiveAcc = zeros(nGrid,1);
-                    parfor jj = 1:nGrid
+                    for jj = 1:nGrid
                         % paranoid
                         primaryGrid = linspace(min(XN(:,primary)),max(XN(:,primary)),nGrid);
                         secondaryGrid = linspace(min(XN(:,secondary)),max(XN(:,secondary)),nGrid);
@@ -213,7 +212,7 @@ for i = 1:size(metadata,1)
                     %axes('Units', 'normalized', 'Position', [0 0 1 1])
 
 
-                    ax(1)=nexttile;
+                    nexttile;
                     primaryRep = repmat(denormPrimaryGrid',1,nGrid)';
                     secondaryRep = flipud(repmat(denormSecondaryGrid',1,nGrid)); % for surf to work, the top of this matrix is the origin orthogonal to X... ¯\(°_o)/¯
 
@@ -229,8 +228,8 @@ for i = 1:size(metadata,1)
                     axis equal square;
                     cb1 = colorbar('southoutside');
 
-                    ax(2)=nexttile;
-                    primaryRep = repmat(denorqmPrimaryGrid',1,nGrid)';
+                    nexttile;
+                    primaryRep = repmat(denormPrimaryGrid',1,nGrid)';
                     secondaryRep = flipud(repmat(denormSecondaryGrid',1,nGrid)); % for surf to work, the top of this matrix is the origin orthogonal to X... ¯\(°_o)/¯
 
                     sp2 = surf(primaryRep,secondaryRep,flipud(gridVariance));
@@ -248,7 +247,7 @@ for i = 1:size(metadata,1)
 
                     %% actual data
 
-                    ax(3)=nexttile;
+                    nexttile;
 
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%% line plot for Min Variance Secondary
@@ -276,8 +275,8 @@ for i = 1:size(metadata,1)
                     stopsecval=denormdata(secondaryGrid(stopind),XMEAN(secondary),XSTD(secondary));
                     startsecval=denormdata(secondaryGrid(startind),XMEAN(secondary),XSTD(secondary));
 
-                    gp_lower = gp_set;
-                    gp_lower = gp_unpak(gp_grid,gp_packed);
+                    gp_lower = gp_set();
+                    gp_lower = gp_unpak(gp_lower,gp_packed);
 
                     xt = repmat(feval('mean',XN), size(XN,1), 1); xt(:,primary) = XN(:,primary);
                     xt(:,secondary) = repmat(secondaryGrid(startind),size(xt,1),1);
@@ -290,8 +289,8 @@ for i = 1:size(metadata,1)
                     plot(minv,lpyt_la(sortIndex),'-b');
                     hold on;
 
-                    gp_upper = gp_set;
-                    gp_upper = gp_unpak(gp_grid,gp_packed);
+                    gp_upper = gp_set();
+                    gp_upper = gp_unpak(gp_upper,gp_packed);
 
                     xt = repmat(feval('mean',XN), size(XN,1), 1); xt(:,primary) = XN(:,primary);
                     xt(:,secondary) = repmat(secondaryGrid(stopind),size(xt,1),1);
@@ -314,7 +313,8 @@ for i = 1:size(metadata,1)
                             [tumors(i).genes{secondary} ' = ' num2str(stopsecval)],...
                            'location','southoutside','FontSize',legFont);
 
-                    exportgraphics(f,[outputdir pgene '/' sgene '.pdf'],'ContentType','vector');
+%                    exportgraphics(f,[outputdir pgene '/' sgene '.pdf'],'ContentType','vector');
+                    export_fig([outputdir pgene '/' sgene '.pdf']);
                 end
                 end
             end
@@ -325,16 +325,16 @@ end
 save([outputdir 'meta.mat'],'tumors');
 path = matlab.desktop.editor.getActiveFilename;
 copyfile(path, outputdir)
+clear gp_grid gp_upper gp_lower
 
 
 %% run additive model
 rootdir = [plotdir,'lineplots_FullData_WithParfor_ADDITIVE_' num2str(nGrid) '_'];
-addpath(genpath('./export_fig'));
 
 mkdir('tmp')
 tumors = struct();
 
-for i = 1:size(metadata,1)
+parfor i = 1:size(metadata,1)
     if ismember(i,mycantypes)
         outputdir = [rootdir metadata.tumor_type{i} '/'];
         mkdir(outputdir);
@@ -456,7 +456,7 @@ for i = 1:size(metadata,1)
                     gridProbs = zeros(nGrid); % a matrix to store the conditional probs
                     gridAcc = zeros(nGrid,1); % this is always the same, but useful for debug
                     gridNaiveAcc = zeros(nGrid,1);
-                    parfor jj = 1:nGrid
+                    for jj = 1:nGrid
                         % paranoid
                         primaryGrid = linspace(min(XN(:,primary)),max(XN(:,primary)),nGrid);
                         secondaryGrid = linspace(min(XN(:,secondary)),max(XN(:,secondary)),nGrid);
@@ -484,7 +484,7 @@ for i = 1:size(metadata,1)
                     %axes('Units', 'normalized', 'Position', [0 0 1 1])
 
 
-                    ax(1)=nexttile;
+                    nexttile;
                     primaryRep = repmat(denormPrimaryGrid',1,nGrid)';
                     secondaryRep = flipud(repmat(denormSecondaryGrid',1,nGrid)); % for surf to work, the top of this matrix is the origin orthogonal to X... ¯\(°_o)/¯
 
@@ -500,7 +500,7 @@ for i = 1:size(metadata,1)
                     axis equal square;
                     cb1 = colorbar('southoutside');
 
-                    ax(2)=nexttile;
+                    nexttile;
                     primaryRep = repmat(denormPrimaryGrid',1,nGrid)';
                     secondaryRep = flipud(repmat(denormSecondaryGrid',1,nGrid)); % for surf to work, the top of this matrix is the origin orthogonal to X... ¯\(°_o)/¯
 
@@ -519,7 +519,7 @@ for i = 1:size(metadata,1)
 
                     %% actual data
 
-                    ax(3)=nexttile;
+                    nexttile;
 
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%% line plot for Min Variance Secondary
@@ -547,8 +547,8 @@ for i = 1:size(metadata,1)
                     stopsecval=denormdata(secondaryGrid(stopind),XMEAN(secondary),XSTD(secondary));
                     startsecval=denormdata(secondaryGrid(startind),XMEAN(secondary),XSTD(secondary));
 
-                    gp_lower = gp_set;
-                    gp_lower = gp_unpak(gp_grid,gp_packed);
+                    gp_lower = gp_set();
+                    gp_lower = gp_unpak(gp_lower,gp_packed);
 
                     xt = repmat(feval('mean',XN), size(XN,1), 1); xt(:,primary) = XN(:,primary);
                     xt(:,secondary) = repmat(secondaryGrid(startind),size(xt,1),1);
@@ -561,8 +561,8 @@ for i = 1:size(metadata,1)
                     plot(minv,lpyt_la(sortIndex),'-b');
                     hold on;
 
-                    gp_upper = gp_set;
-                    gp_upper = gp_unpak(gp_grid,gp_packed);
+                    gp_upper = gp_set();
+                    gp_upper = gp_unpak(gp_upper,gp_packed);
 
                     xt = repmat(feval('mean',XN), size(XN,1), 1); xt(:,primary) = XN(:,primary);
                     xt(:,secondary) = repmat(secondaryGrid(stopind),size(xt,1),1);
@@ -585,7 +585,8 @@ for i = 1:size(metadata,1)
                             [tumors(i).genes{secondary} ' = ' num2str(stopsecval)],...
                            'location','southoutside','FontSize',legFont);
 
-                    exportgraphics(f,[outputdir pgene '/' sgene '.pdf'],'ContentType','vector');
+%                    exportgraphics(f,[outputdir pgene '/' sgene '.pdf'],'ContentType','vector');
+                    export_fig([outputdir pgene '/' sgene '.pdf']);
                 end
                 end
             end
