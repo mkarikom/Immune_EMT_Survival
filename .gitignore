@@ -5,3 +5,4 @@
 *.Rproj
 *.mat
 *.Rhistory
+tmp/
