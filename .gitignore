@@ -5,4 +5,8 @@
 *.Rproj
 *.mat
 *.Rhistory
+<<<<<<< Updated upstream
 tmp/
+=======
+core.*
+>>>>>>> Stashed changes
