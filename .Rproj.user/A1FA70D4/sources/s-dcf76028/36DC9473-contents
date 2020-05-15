@@ -6,7 +6,7 @@ library(dbscan)
 rm(list=ls())
 
 
-fdir = "../matlab/DataTables/bootstrap_Both_WithParfor_Selection_Progbar_0.2k_500n_0.01nstd_additivekern/"
+fdir = "../matlab/DataTables/resampling_IG_G_1k/"
 dir.create("../Correlation_plots/")
 dirname = paste0("../Correlation_plots/CorrPlots_DBSCAN_", substr(fdir,start = 22,stop = nchar(fdir)))
 dir.create(dirname)

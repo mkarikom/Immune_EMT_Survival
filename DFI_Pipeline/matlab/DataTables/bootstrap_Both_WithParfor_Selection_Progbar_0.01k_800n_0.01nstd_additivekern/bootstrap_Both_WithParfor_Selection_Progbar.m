@@ -7,32 +7,24 @@ optmeth = @fminunc;
 basetolf = 1e-3;
 basetolx = 1e-3;
 jitterbase = 1e-9;
-maxiter = 100;
-maxfevals = 100;
+maxiter = 1000;
+maxfevals = 1000;
 % sampling
 mycantypes = [1,3];
-<<<<<<< Updated upstream
-nk = .5; % nk * 1000 = the number of models to fit
-n_boot = nk*1000; 
-n_sub = 5000; % the number of resampled patients per n_boot model fit
-=======
 nk = 0.01; % nk * 1000 = the number of models to fit
 n_boot = nk*1000; 
 n_sub = 800; % the number of resampled patients per n_boot model fit
->>>>>>> Stashed changes
 nstd = 1e-2; % the nstd * standard deviation of gene n * rand(1) + gene n = the level of gene n when doing resampling
 % priors
 msiginit = 1e-9;
 maglinit = 1e-9;
 cminit = 1e-1; % initial value for constant kernel
-kerneltype = 'se-ard'; % set 'additive' or 'se-ard'
+kerneltype = 'additive';
 
 if ~isdeployed
     addpath("../DataTables/")
 end
-dirname = ['./DataTables/bootstrap_Both_WithParfor_Selection_Progbar_' ...
-    '_maxfcnt' num2str(maxfevals) ...
-    num2str(nk) 'k_',num2str(n_sub),'pat','_',num2str(nstd),'nstd_',kerneltype,'.kern/'];
+dirname = ['./DataTables/bootstrap_Both_WithParfor_Selection_Progbar_' num2str(nk) 'k_',num2str(n_sub),'n','_',num2str(nstd),'nstd_',kerneltype,'kern/'];
 metadata = readtable("../DataTables/Prolif_acc_AddRecGene.txt", 'ReadRowNames', false, 'Delimiter', '\t');
 
 mkdir(dirname);
@@ -171,7 +163,7 @@ for i = 1:size(metadata,1)
 
                 opt=optimset('TolFun',basetolf,'TolX',basetolx,'Algorithm','quasi-newton',...
                     'MaxIter',maxiter,'MaxFunEvals',maxfevals,...
-                    'Display','iter','Diagnostics','on');
+                    'Display','iter');
                 gp=gp_optim(gp,XN,Y,'opt',opt,'optimf',optmeth);
 
                 [EFT, VARFT, lploo, EYT, VARYT] = gpep_loopred(gp,XN,Y);
