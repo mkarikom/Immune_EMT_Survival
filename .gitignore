@@ -7,7 +7,7 @@
 *.Rhistory
 tmp/
 core.*
-.Rproj.user
+.Rproj.user/
 *.xz
 *.7z
 
