@@ -6,9 +6,9 @@ library(dbscan)
 rm(list=ls())
 
 
-fdir = "../matlab/DataTables/resampling_IG_G_1k/"
+fdir = "../matlab/DataTables/bootstrap_Both_WithParfor_Selection_Progbar__maxfcnt1001k_100pat_0.01nstd_se-ard.kern/"
 dir.create("../Correlation_plots/")
-dirname = paste0("../Correlation_plots/CorrPlots_DBSCAN_", substr(fdir,start = 22,stop = nchar(fdir)))
+dirname = paste0("../Correlation_plots/CorrPlots_DBSCAN_findKeepAgain_", substr(fdir,start = 22,stop = nchar(fdir)))
 dir.create(dirname)
 
 clusternum = c(1,2,3,4,5,6,7,8,9.10)

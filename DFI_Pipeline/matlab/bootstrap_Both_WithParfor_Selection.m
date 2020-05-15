@@ -11,15 +11,15 @@ maxiter = 1000;
 maxfevals = 1000;
 % sampling
 mycantypes = [1,3];
-nk = 10; % nk * 1000 = the number of models to fit
+nk = 1; % nk * 1000 = the number of models to fit
 n_boot = nk*1000; 
-n_sub = 1000; % the number of resampled patients per n_boot model fit
+n_sub = 100; % the number of resampled patients per n_boot model fit
 nstd = 1e-2; % the nstd * standard deviation of gene n * rand(1) + gene n = the level of gene n when doing resampling
 % priors
 msiginit = 1e-9;
 maglinit = 1e-9;
 cminit = 1e-1; % initial value for constant kernel
-kerneltype = 'additive';
+kerneltype = 'se-ard';
 
 if ~isdeployed
     addpath("../DataTables/")
@@ -140,7 +140,7 @@ for i = 1:size(metadata,1)
 
 
                 gpcf_c = gpcf_constant(gpcf_c,'constSigma2_prior',prior_gaussian('s2',0.1));
-                gpcf_all = gpcf_sexp(gpcf_all, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                gpcf_all = gpcf_sexp(gpcf_all, 'magnSigma2_prior',prior_gaussian('mu',0.01,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',2,'s2_prior',prior_invgamma('sh',3,'s',1))); %
                 gpcf = gpcf_sexp(gpcf, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
                 gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
                 gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
