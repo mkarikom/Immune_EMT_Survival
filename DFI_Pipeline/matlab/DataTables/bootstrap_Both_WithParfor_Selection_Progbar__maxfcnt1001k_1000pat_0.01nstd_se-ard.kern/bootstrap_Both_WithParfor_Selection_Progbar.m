@@ -149,7 +149,7 @@ for i = 1:size(metadata,1)
 
 
                 gpcf_c = gpcf_constant(gpcf_c,'constSigma2_prior',prior_gaussian('s2',0.1));
-                gpcf_all = gpcf_sexp(gpcf_all, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
+                gpcf_all = gpcf_sexp(gpcf_all, 'magnSigma2_prior',prior_gaussian('mu',0.01,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',2,'s2_prior',prior_invgamma('sh',3,'s',1))); %
                 gpcf = gpcf_sexp(gpcf, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
                 gpcf_wnt2 = gpcf_sexp(gpcf_wnt2, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
                 gpcf_wnt5a = gpcf_sexp(gpcf_wnt5a, 'magnSigma2_prior',prior_gaussian('mu',1,'s2',0.25),'lengthScale_prior',prior_gaussian('mu',1,'s2_prior',prior_invgamma('sh',3,'s',1))); %
@@ -165,7 +165,7 @@ for i = 1:size(metadata,1)
 
                 opt=optimset('TolFun',basetolf,'TolX',basetolx,'Algorithm','quasi-newton',...
                     'MaxIter',maxiter,'MaxFunEvals',maxfevals,...
-                    'Display','iter','Diagnostics','on');
+                    'Display','iter');
                 gp=gp_optim(gp,XN,Y,'opt',opt,'optimf',optmeth);
 
                 [EFT, VARFT, lploo, EYT, VARYT] = gpep_loopred(gp,XN,Y);
