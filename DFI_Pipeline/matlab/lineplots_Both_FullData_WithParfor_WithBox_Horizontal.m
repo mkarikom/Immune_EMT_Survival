@@ -56,7 +56,7 @@ if ~isdeployed
 end
 
 mkdir(plotdir);
-rootdir = [plotdir,'lineplots_FullData_WithParfor_WithBox_' num2str(nGrid) '_'];
+rootdir = [plotdir,'lineplots_FullData_WithParfor_WithBox_Horizontal_' num2str(nGrid) '_'];
 metadata = readtable("../DataTables/Prolif_acc_AddRecGene.txt", 'ReadRowNames', false, 'Delimiter', '\t');
 
 mkdir('tmp')
@@ -168,7 +168,7 @@ for i = 1:size(metadata,1)
         %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         ppm = ParforProgressbar(M);
-        for primary = 1:M
+        parfor primary = 1:M
             pgene = tumors(i).genes{primary}; % name of primary gene
             if any(strcmp(primarygenes,pgene))
         
@@ -363,33 +363,11 @@ for i = 1:size(metadata,1)
                     flipInd = nGrid:-1:1;
                     ydiscreteFlipped = flipInd(ydiscrete)';
                     gridProbs2 = gridProbs;
-                    interpf = interp1(denormPrimaryGrid(xdiscrete),probf,linspace(leftx,rightx),'pchip');
                     indgridprobs = sub2ind(size(gridProbs),ydiscreteFlipped,xdiscrete);
-                    gridProbs2(indgridprobs) = min(gridProbs2(:));
-                    
-                    
-                    sp2 = pcolor(primaryRep,secondaryRep,flipud(gridProbs2));
-                    axis square;
-                    
-                    
-                    gridProbs3 = gridProbs;
-                    gridProbs3(end,end) = min(gridProbs2(:));
-                    gridProbs3(1,1) = min(gridProbs(:));
-                    pcolor(primaryRep,secondaryRep,flipud(gridProbs3));
-                    axis square;
-                                        
-                    gridProbs3 = gridProbs2-mean(gridProbs2(:));
-                    
-                    indgridprobs = sub2ind(size(gridProbs),xdiscrete,ydiscreteFlipped);
                     probf = gridProbs(indgridprobs);
                     interpf = interp1(denormPrimaryGrid(xdiscrete),probf,linspace(leftx,rightx),'pchip');
                     plot(linspace(leftx,rightx),interpf,'LineWidth',2,'Color','magenta');
                     axis square;
-                    
-                    [c1,c2]=min([exp(gridProbs(xdiscrete(1),ydiscrete(1))),...
-                                    exp(gridProbs(xdiscrete(end),ydiscrete(end)))])
-                    [fc1,fc2]=min([exp(gridProbs(xdiscrete(1),ydiscreteFlipped(1))),...
-                                    exp(gridProbs(xdiscrete(end),ydiscreteFlipped(end)))])
                     
                     ga = gca; ga.FontSize=axFont;
                     ylabel('p(high-DFI)','FontSize',labFont)
@@ -416,7 +394,7 @@ clear gp_grid gp_upper gp_lower
 
 
 %% run additive model
-rootdir = [plotdir,'lineplots_FullData_WithParfor_WithBox_ADDITIVE_' num2str(nGrid) '_'];
+rootdir = [plotdir,'lineplots_FullData_WithParfor_WithBox_ADDITIVE_Horizontal_' num2str(nGrid) '_'];
 mkdir('tmp')
 tumors = struct();
 
@@ -570,7 +548,7 @@ for i = 1:size(metadata,1)
                     denormPrimaryGrid = denormdata(primaryGrid,XMEAN(primary),XSTD(primary));
                     denormSecondaryGrid = denormdata(secondaryGrid,XMEAN(secondary),XSTD(secondary));
 
-                    f = figure('visible','off');
+                    f = figure('visible','on');
 
                     tt = tiledlayout(1,3,'Padding','normal');
                     %axes('Units', 'normalized', 'Position', [0 0 1 1])
@@ -614,9 +592,9 @@ for i = 1:size(metadata,1)
                                     'MarkerEdgeColor', 'red');
                     axis square;
 
-                                
+                    
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    %%% Draw 90th CI box on Variance
+                    %%% discretize the 2D X'th percentile interval on the data
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     % first, we need to make sure that the min/max value for primary/secondary is actually within the 2xsd bounding region
                     % if not then we need to truncate the bounding region so that it fits
@@ -640,12 +618,26 @@ for i = 1:size(metadata,1)
                     else
                         righty = max(x(:,secondary));
                     end
-                    corners = [leftx,lefty;rightx,righty];
-                    rectangle('LineStyle','--','EdgeColor','y','LineWidth',2,'Position',...
-                        [leftx,lefty,rightx-leftx,righty-lefty]);
                     
+                    flippedSecondary = flip(denormSecondaryGrid);
+                    xstart=discretize(leftx,denormPrimaryGrid,'IncludedEdge','left');
+                    xstop=discretize(rightx,denormPrimaryGrid,'IncludedEdge','left');
+                    ystart=discretize(lefty,flippedSecondary,'IncludedEdge','left');
+                    ystop=discretize(righty,flippedSecondary,'IncludedEdge','left');
+                    discXstart = denormPrimaryGrid(xstart);
+                    discXstop = denormPrimaryGrid(xstop);
+                    discYstart = flippedSecondary(ystart);
+                    discYstop = flippedSecondary(ystop);
+                    
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    %%% Draw X'th percentile CI box on Vars
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     
+                    corners = [discXstart,discYstart;discXstop,discYstop];
+                    rectangle('LineStyle','--','EdgeColor','cyan','LineWidth',2,...
+                        'Position',[discXstart,discYstart,discXstop-discXstart,discYstop-discYstart]);
                     
 
+                    
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%% Draw Probs
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%            
@@ -671,11 +663,25 @@ for i = 1:size(metadata,1)
                     ga = gca; ga.FontSize=axFont;
                     hold on;
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    %%% Draw 90th CI box on Probs
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%            
-                    rectangle('LineStyle','--','EdgeColor','y','LineWidth',2,'Position',...
-                        [leftx,lefty,rightx-leftx,righty-lefty]);
-                    line(corners(:,1),corners(:,2),'Color','magenta','LineWidth',2,'LineStyle','--');
+                    %%% Draw X'th percentile CI box on Vars
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     
+                    rectangle('LineStyle','--','EdgeColor','cyan','LineWidth',2,...
+                        'Position',[discXstart,discYstart,discXstop-discXstart,discYstop-discYstart]);
+                    
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    %%% Draw line for left approximation of secondary gene along left approx bounding primary gene values
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     
+                    rectslope = (discYstop-discYstart)/(discXstop-discXstart); 
+                    xstepsize = denormPrimaryGrid(xstart+1)-denormPrimaryGrid(xstart);
+                    xexact = denormPrimaryGrid(xstart:xstop)';
+                    yexact = ([0:xstop-xstart]*xstepsize*rectslope)'+lefty;
+                    xapprox = xexact;
+                    xdiscrete = discretize(xapprox,denormPrimaryGrid);
+                    ydiscrete = discretize(yexact,flippedSecondary);
+                    yapprox = flippedSecondary(ydiscrete)';
+                    line(xapprox,yapprox,'Color','magenta','LineWidth',3,'LineStyle','--');
+                    
+                    
                     axis square;
                     
                     cb1 = colorbar('southoutside');
@@ -685,42 +691,23 @@ for i = 1:size(metadata,1)
                     %% actual data
 
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    %%% line plot for Min Variance Secondary
+                    %%% line plot for the slice
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     fl1=nexttile;
 
-                    xstepsize = mean(denormPrimaryGrid(2:end)-denormPrimaryGrid(1:end-1));
-                    ystepsize = mean(denormSecondaryGrid(2:end)-denormSecondaryGrid(1:end-1));
-                    xstart = min(find(leftx < denormdata(primaryGrid,XMEAN(primary),XSTD(primary))));
-                    xend = max(find(rightx > denormdata(primaryGrid,XMEAN(primary),XSTD(primary))));
-                    nxsteps = xend - xstart;
-                    rectslope = (righty-lefty)/(rightx-leftx); 
-                    ysteps = lefty+xstepsize*[1:nxsteps]*rectslope;
-                    xdiscrete = xstart:1:xend-1;
-                    ydiscrete = discretize(ysteps',flip(denormSecondaryGrid)','IncludedEdge','left');
-                    indgridprobs = sub2ind(size(gridProbs),xdiscrete,ydiscrete');
+                    % the y secondary grid values (needed to be flipped for previous discretization)
+                    flipInd = nGrid:-1:1;
+                    ydiscreteFlipped = flipInd(ydiscrete)';
+                    gridProbs2 = gridProbs;
+                    indgridprobs = sub2ind(size(gridProbs),ydiscreteFlipped,xdiscrete);
                     probf = gridProbs(indgridprobs);
                     interpf = interp1(denormPrimaryGrid(xdiscrete),probf,linspace(leftx,rightx),'pchip');
-
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    %%% bg color for the plot
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-                    bgcols = repmat(linspace(min(interpf),max(interpf),20),[100,1])';
-%                     pcolor(bgcols)
-                    colormap(fl1,mapProb);
-                    caxis(fl1,probLims);
-                    hold on;
-                    
                     plot(linspace(leftx,rightx),interpf,'LineWidth',2,'Color','magenta');
                     axis square;
-
+                    
                     ga = gca; ga.FontSize=axFont;
-
                     ylabel('p(high-DFI)','FontSize',labFont)
                     xlabel(['Log expression of ' tumors(i).genes{primary}],'FontSize',labFont);
-
-%                    exportgraphics(f,[outputdir pgene '/' sgene '.pdf'],'ContentType','vector');
                     export_fig([outputdir pgene '/' sgene '.pdf']);
                 end
                 end
