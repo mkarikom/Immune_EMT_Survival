@@ -52,21 +52,22 @@ for(tumortype in tumortypes){
     length(which(check$table[,"p"] <= 5e-2))
   })) # 0 indicates non-significant relationship between Schoenfeld residuals and time
   
+  coxph_filter = c()
   if(dim(pvtib)[1] > 0){
     pvtib$tumortype = rep(tumortype, dim(pvtib)[1])
-    pvtib$pchsq_km = rep(NaN, dim(pvtib)[1])
+    pchsq_km = rep(Inf, dim(pvtib)[1])
     
     for(i in 1:nrow(pvtib)){
-      coxph_filter = (pv$summary$ScoreTest[i] <= 5e-2 &
+      coxph_filter[i] = (pv$summary$ScoreTest[i] <= 5e-2 &
                         pv$summary$Schoenfeld[i] == 0 &
                         pv$summary$bothP[i] <=5e-2 & pv$summary$emtP[i] <= 5e-2 & pv$summary$inflamP[i] <= 5e-2 &
                         pv$summary$inflamHR[i] < pv$summary$bothHR[i] & pv$summary$emtHR[i] < pv$summary$bothHR[i] &
                         pv$summary$bothHR[i] >= (pv$summary$emtHR + 0.05)[i] &
                         pv$summary$bothHR[i] >= (pv$summary$inflamHR[i] + 0.05))
       
-      if(coxph_filter+saveall){
+      if(coxph_filter[i]+saveall){
         print(paste0("checking ", tumortype, " pvtib, row ", i, " of ", nrow(pvtib)))
-        pvtib$pchsq_km[i] = plotTT(embedding = embedding$BOTH$embed,
+        pchsq_km[i] = plotTT(embedding = embedding$BOTH$embed,
                                    models = pv,
                                    tumortype = tumortype,
                                    plotdir = "../Plots/Surv_Plots/",
@@ -75,6 +76,9 @@ for(tumortype in tumortypes){
       }      
     }
   }
+
+  pvtib$pchsq_km = pchsq_km
+  pvtib$coxph_filter = coxph_filter
   alltumors = bind_rows(alltumors,pvtib)
 }
 browser()

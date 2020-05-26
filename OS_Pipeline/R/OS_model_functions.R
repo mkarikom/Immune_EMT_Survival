@@ -274,7 +274,20 @@ plotTT <- function(data_list = NULL,
                    comboInd = NULL,
                    mingroupsize = 30,
                    dbscan_dir = "../DataTables/DBSCAN_Clust/"){
-  # # If there are significant KM models, save the plots and the model summaries for Cox and KM
+  # Save model summaries for all coxph 
+  # If there are significant KM models, save the plots and the model summaries
+  
+  
+  #######################
+  ### save coxph latex table
+  #######################
+  captext = paste0("Summary of Cox PH Model for ", tumortype)
+  fname = paste0(coxtabdir, tumortype, "_", comboInd, "_cph", ".tex")
+  cat('\n saving ',fname,'\n')
+  foo = capture.output(stargazer(models$models[[comboInd]], 
+                                 label = paste0("table:", tumortype, "_cph"),
+                                 title = latexify(captext, doublebackslash = F), # can set this to captext but seems to be creating separate tables
+                                 out = fname))
   plots = list()
   colors = c("#b2df8a",
              "#33a02c")
@@ -375,16 +388,6 @@ plotTT <- function(data_list = NULL,
                  top = title,
                  bottom = coxph_cap)
     dev.off()
-    #######################
-    ### save coxph latex table
-    #######################
-    captext = paste0("Summary of Cox PH Model for ", tumortype)
-    fname = paste0(coxtabdir, tumortype, "_", comboInd, "_cph", ".tex")
-    cat('\n saving ',fname,'\n')
-    foo = capture.output(stargazer(models$models[[comboInd]], 
-                                   label = paste0("table:", tumortype, "_cph"),
-                                   title = latexify(captext, doublebackslash = F), # can set this to captext but seems to be creating separate tables
-                                   out = fname))
     
     #######################
     ### save km latex table

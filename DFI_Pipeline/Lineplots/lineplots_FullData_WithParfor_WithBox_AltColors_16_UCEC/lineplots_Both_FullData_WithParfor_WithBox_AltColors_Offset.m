@@ -21,9 +21,9 @@ seed = 1234;
 
 % the number of patients in a bootstrap sample
 skipticks = 0;
-axFont=11;
-legFont=11;
-labFont=11;
+axFont=12;
+legFont=12;
+labFont=12;
 s = RandStream('mlfg6331_64');
 optmeth = @fminunc;
 %optmeth = @fminscg;

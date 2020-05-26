@@ -1,6 +1,7 @@
 OSresults_path = "../../OS_Pipeline/DataTables/OS_test_results_filtered.csv"
 UMAP_path = "../../OS_Pipeline/DataRDS/UMAP_embeddings/"
 data_path = "../../Data/primary_tumors/"
+gmplotdir = "../DFI_Class_Plots/"
 savepath = "../DataTables/"
 
 trainrate = .5
@@ -86,18 +87,23 @@ for(ttype in unique(bothHR_all$tumortype)){
                          datatypes = c(rep("double",length(rows)), "double", "char")), # the types (for readtable matlab options)  
               paste0(savepath,fname_genelist), row.names = F)
   
+  fname <- paste0(gmplotdir, ttype, "_DFI_class.pdf")
+  pdf(file = fname, width = 5, height = 8)
+  par(mfrow=c(3,1))
+  plot(fit, what = c("classification"),xlab = "Disease Free Interval (Days)")
+  plot(fit, what = c("density"),xlab = "Disease Free Interval (Days)")
+  hist(subsetDFI$DFI.time.cr,xlab = "Disease Free Interval (Days)", main = NULL)
+  dev.off()
   
   tumor_type[counter] = ttype
   n_data_points[counter] = ncol(data_prolif)
   train_rate[counter] = trainrate
   pred_acc[counter] = 0
-  fname_embedding[counter] = fname_umap
   fname_expression[counter] = fname_expr
   fname_expression_genes[counter] = fname_genelist
   dirname_gpplot[counter] = paste0(ttype)
   counter = counter + 1
 }
 
-Prolif_acc = data.frame(tumor_type,n_data_points,pred_acc,
-                        fname_embedding, fname_expression, fname_expression_genes, dirname_gpplot) # each row of this table will be one GPML model fitted by running gp_tumor_single.m
+Prolif_acc = data.frame(tumor_type,n_data_points,pred_acc, fname_expression, fname_expression_genes, dirname_gpplot) # each row of this table will be one GPML model fitted by running gp_tumor_single.m
 write.table(Prolif_acc, "../DataTables/Prolif_acc_AddRecGene.txt", sep = "\t", row.names = F)

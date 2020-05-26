@@ -1,4 +1,4 @@
-"tumor_type"	"n_data_points"	"pred_acc"	"fname_embedding"	"fname_expression"	"fname_expression_genes"	"dirname_gpplot"
-"BLCA"	159	0	"../DataTables/UCEC_UMAP_AddRecGene.csv"	"BLCA_EXPR_AddRecGene.csv"	"BLCA_genelist_AddRecGene.csv"	"BLCA"
-"LIHC"	273	0	"../DataTables/UCEC_UMAP_AddRecGene.csv"	"LIHC_EXPR_AddRecGene.csv"	"LIHC_genelist_AddRecGene.csv"	"LIHC"
-"UCEC"	109	0	"../DataTables/UCEC_UMAP_AddRecGene.csv"	"UCEC_EXPR_AddRecGene.csv"	"UCEC_genelist_AddRecGene.csv"	"UCEC"
+"tumor_type"	"n_data_points"	"pred_acc"	"fname_expression"	"fname_expression_genes"	"dirname_gpplot"
+"BLCA"	184	0	"BLCA_EXPR_AddRecGene.csv"	"BLCA_genelist_AddRecGene.csv"	"BLCA"
+"LIHC"	312	0	"LIHC_EXPR_AddRecGene.csv"	"LIHC_genelist_AddRecGene.csv"	"LIHC"
+"UCEC"	114	0	"UCEC_EXPR_AddRecGene.csv"	"UCEC_genelist_AddRecGene.csv"	"UCEC"
