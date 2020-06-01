@@ -4,4 +4,9 @@
 *.RData
 *.Rproj
 *.mat
-
+*.Rhistory
+tmp/
+core.*
+.Rproj.user/
+*.xz
+*.7z
